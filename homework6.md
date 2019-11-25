@@ -143,3 +143,27 @@ model due to small `p.value`.
 There for the model we set on the factors underying birthweight is
 `birthweight ~ babysex + bhead + blength + delwt + gaweeks + parity +
 smoken`.
+
+### Diagnositic
+
+Then we diagonise whether the linear model fit.
+
+``` r
+resplot_mrace= birthweight %>% 
+  modelr::add_residuals(reg_lbt_m_sex) %>% 
+  modelr::add_predictions(reg_lbt_m_sex) %>%
+  ggplot(aes(x = pred, y = resid)) + geom_point()+
+  geom_line( y = 0, color = "red")+
+  labs(
+    title = "Model Residuals against Fitted Values",
+    x = "Fitted values",
+    y = "Residuals"
+  )
+resplot_mrace
+```
+
+<img src="homework6_files/figure-gfm/unnamed-chunk-5-1.png" width="90%" />
+
+From the plot above,we can see that most of the fitted values lie
+between 2000-4000 and most of the residuals are randomly lie around
+zero, indicating linearity .
