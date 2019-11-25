@@ -167,3 +167,89 @@ resplot_mrace
 From the plot above,we can see that most of the fitted values lie
 between 2000-4000 and most of the residuals are randomly lie around
 zero, indicating linearity .
+
+### Comparing models
+
+``` r
+reg_model1 = lm(bwt~ babysex + bhead + blength + delwt + gaweeks + parity + smoken, data = birthweight)
+reg_model2 = lm(bwt ~ blength + gaweeks, data = birthweight)
+reg_model3 = lm(bwt~ bhead*blength + bhead *babysex + blength*babysex + bhead*babysex*blength,  data = birthweight)
+```
+
+``` r
+reg_model2 %>%  
+  broom::tidy() %>%  
+  select(term, estimate, p.value)%>% 
+  knitr::kable()
+```
+
+| term        |     estimate | p.value |
+| :---------- | -----------: | ------: |
+| (Intercept) | \-4347.66707 |       0 |
+| blength     |    128.55569 |       0 |
+| gaweeks     |     27.04673 |       0 |
+
+This table shows that blength and gaweeks all have extremly small
+`p.value`, indicating the conefficient of these two are both away from
+zero.
+
+``` r
+reg_model3 %>%
+  broom::tidy() %>%
+  select(term, estimate, p.value)%>%  
+  knitr::kable()
+```
+
+| term                        |       estimate |   p.value |
+| :-------------------------- | -------------: | --------: |
+| (Intercept)                 | \-7176.8170221 | 0.0000000 |
+| bhead                       |    181.7956350 | 0.0000018 |
+| blength                     |    102.1269235 | 0.0000992 |
+| babysexfemale               |   6374.8683508 | 0.0001469 |
+| bhead:blength               |    \-0.5536096 | 0.4780117 |
+| bhead:babysexfemale         |  \-198.3931810 | 0.0001047 |
+| blength:babysexfemale       |  \-123.7728875 | 0.0004288 |
+| bhead:blength:babysexfemale |      3.8780531 | 0.0002453 |
+
+This table shows that except for the interaction between `bhead` and
+`blength`, all other covariates have coefficients far away from zero.
+
+``` r
+cv_df =
+  modelr::crossv_mc(birthweight, 100) %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble))
+
+cv_df = 
+  cv_df %>% 
+  mutate(reg_model1  = map(train, ~lm(bwt~ mrace + babysex, data = .x)),
+         reg_model2   = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+         reg_model3  = map(train, ~lm(bwt~ bhead+ blength + babysex + bhead*blength + bhead *babysex + blength*babysex + bhead*babysex*blength, data = as_tibble(.x)))) %>% 
+  mutate(rmse_model1 = map2_dbl(reg_model1 , test, ~modelr::rmse(model = .x, data = .y)),
+         rmse_model2  = map2_dbl(reg_model2, test, ~modelr::rmse(model = .x, data = .y)),
+         rmse_model3 = map2_dbl(reg_model3, test, ~modelr::rmse(model = .x, data = .y)))
+```
+
+``` r
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin(aes(fill = model))+
+  labs(
+    title = "Root Mean Square Error Comparison",
+    x = "Models",
+    y = "Root Mean Square Error"
+  )
+```
+
+<img src="homework6_files/figure-gfm/unnamed-chunk-10-1.png" width="90%" />
+Based on the plot above, it is clear that the third model with the
+lowest RMSE ,which is the one using head circumference, length, sex, and
+all interactions (including the three-way interaction) between these
+fits the best.

@@ -89,3 +89,68 @@ resplot_mrace
 ```
 
 From the plot above,we can see that most of the fitted values lie between 2000-4000 and most of the residuals are randomly lie around zero, indicating linearity . 
+
+
+### Comparing models
+
+```{r}
+reg_model1 = lm(bwt~ babysex + bhead + blength + delwt + gaweeks + parity + smoken, data = birthweight)
+reg_model2 = lm(bwt ~ blength + gaweeks, data = birthweight)
+reg_model3 = lm(bwt~ bhead*blength + bhead *babysex + blength*babysex + bhead*babysex*blength,  data = birthweight)
+```
+
+
+```{r}
+reg_model2 %>%  
+  broom::tidy() %>%  
+  select(term, estimate, p.value)%>% 
+  knitr::kable()
+```
+
+This table shows that blength and gaweeks all have extremly small `p.value`, indicating the conefficient of these two are both away from zero.
+
+```{r}
+reg_model3 %>%
+  broom::tidy() %>%
+  select(term, estimate, p.value)%>%  
+  knitr::kable()
+```
+
+This table shows that except for the interaction between `bhead` and `blength`, all other covariates have coefficients far away from zero. 
+
+```{r}
+cv_df =
+  modelr::crossv_mc(birthweight, 100) %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble))
+
+cv_df = 
+  cv_df %>% 
+  mutate(reg_model1  = map(train, ~lm(bwt~ mrace + babysex, data = .x)),
+         reg_model2   = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+         reg_model3  = map(train, ~lm(bwt~ bhead+ blength + babysex + bhead*blength + bhead *babysex + blength*babysex + bhead*babysex*blength, data = as_tibble(.x)))) %>% 
+  mutate(rmse_model1 = map2_dbl(reg_model1 , test, ~modelr::rmse(model = .x, data = .y)),
+         rmse_model2  = map2_dbl(reg_model2, test, ~modelr::rmse(model = .x, data = .y)),
+         rmse_model3 = map2_dbl(reg_model3, test, ~modelr::rmse(model = .x, data = .y)))
+
+```
+
+
+```{r}
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin(aes(fill = model))+
+  labs(
+    title = "Root Mean Square Error Comparison",
+    x = "Models",
+    y = "Root Mean Square Error"
+  )
+```
+Based on the plot above, it is clear that the third model with the lowest RMSE ,which is the one using head circumference, length, sex, and all interactions (including the three-way interaction) between these fits the best. 
