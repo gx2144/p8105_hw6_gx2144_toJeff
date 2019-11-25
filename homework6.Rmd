@@ -40,3 +40,30 @@ birthweight =
     mrace = fct_infreq(mrace)
      )
 ```
+
+
+
+
+### Model Building
+
+First we hypothesize that birthweight was affected by all the predcitors given by the dataset.
+
+```{r}
+reg_lbt_m = lm(bwt ~ babysex + bhead + blength + delwt + fincome + frace + gaweeks + menarche + momage + mheight + mrace + parity + pnumlbw + pnumsga + ppbmi + ppwt + smoken + wtgain, data = birthweight)  
+
+summary(reg_lbt_m)
+```
+
+Then we drop out those whose `p.value` is larger than 0.05 and refit the model.
+
+```{r}
+reg_lbt_m_sex = lm(bwt~ babysex + bhead + blength + delwt + gaweeks + parity + smoken, data = birthweight)
+broom::tidy(reg_lbt_m_sex) %>% 
+  select(term, estimate, p.value) %>% 
+  knitr::kable()
+```
+
+The table shows that all the predictors now cnotribute to the fitted model due to small `p.value`.
+
+There for the model we set on the factors underying birthweight is 
+`birthweight ~ babysex + bhead + blength + delwt + gaweeks + parity + smoken`.
