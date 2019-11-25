@@ -262,21 +262,7 @@ bootstrap_results%>%
   )
 ```
 
-### Quantile and CI for Adjusted R squared
-
-```{r}
-CI_adjr = t.test(bootstrap_results$adj.r.squared) 
-
-estimate_r %>% 
-  mutate(
-    lwr = CI_adjr[[4]][1],
-    upr = CI_adjr[[4]][2]
-  ) %>% 
-  knitr::kable()
-```
-
-
-* Description: The distribution of Adjusted R square shows that this distribution has a heavy tail extending to low values and a bit of a “shoulder”, features that may be related to the frequency with which large outliers are included in the bootstrap sample.From the table above, we can see that the 95% confidence interval for adjusted R squared is [`r CI_adjr$conf.int`].
+* Description: The distribution of Adjusted R square shows that this distribution has a heavy tail extending to low values and a bit of a “shoulder”, features that may be related to the frequency with which large outliers are included in the bootstrap sample.
 
 
 ### Plot the distribution of log(beta0 * beta1)
@@ -294,17 +280,21 @@ estimate_r %>%
 
 ```
 
-### Quantile and CI for log(beta0, beta1)
+* Description: The distribution of log(β0 ∗ β1) shows that this distribution seems normal, features that may be related to the few outliers are included in the bootstrap sample. This indicates and transformation of certain estimates could solve the non-normality problem caused by outliers.
+ 
+### Quantile for Adjusted R squared and log(beta0, beta1)
 
 ```{r}
-CI_log = t.test(bootstrap_results_log$log_beta0_beta1) 
-
-estimate_log %>% 
-  mutate(
-    lwr = CI_log[[4]][1],
-    upr = CI_log[[4]][2]
-  ) %>% 
-  knitr::kable()
+CI_result = 
+  tibble(
+    Conf_int = c("lwr","upr"),
+    CI_R_squared = quantile(pull(bootstrap_results,adj.r.squared), probs = c(0.025, 0.975),na.rm = TRUE),
+    CI_logbeta0_1 =  quantile(pull(bootstrap_results_log,log_beta0_beta1), probs = c(0.025, 0.975), na.rm = TRUE)
+  )
+  
+CI_result %>% 
+   knitr::kable(digits = 3)
 ```
 
-* Description: The distribution of log(β0 ∗ β1) shows that this distribution seems normal, features that may be related to the few outliers are included in the bootstrap sample. This indicates and transformation of certain estimates could solve the non-normality problem caused by outliers. From the table above, we can see that the 95% confidence interval for log(β0 ∗ β1) is [`r CI_log$conf.int`].
+* Description:From the table above, we can see that the 95% confidence interval for adjusted R squared is [0.893, 0.927]. The 95% confidence interval for log(β0 ∗ β1) is [1.967, 2.059].
+

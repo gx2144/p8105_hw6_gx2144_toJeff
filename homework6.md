@@ -9,14 +9,14 @@ Guangling Xu
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ----------------------- tidyverse 1.3.0 --
+    ## -- Attaching packages ------- tidyverse 1.2.1 --
 
-    ## √ ggplot2 3.2.1     √ purrr   0.3.3
+    ## √ ggplot2 3.2.1     √ purrr   0.3.2
     ## √ tibble  2.1.3     √ dplyr   0.8.3
     ## √ tidyr   1.0.0     √ stringr 1.4.0
     ## √ readr   1.3.1     √ forcats 0.4.0
 
-    ## -- Conflicts -------------------------- tidyverse_conflicts() --
+    ## -- Conflicts ---------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -363,29 +363,10 @@ bootstrap_results%>%
 
 <img src="homework6_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
 
-### Quantile and CI for Adjusted R squared
-
-``` r
-CI_adjr = t.test(bootstrap_results$adj.r.squared) 
-
-estimate_r %>% 
-  mutate(
-    lwr = CI_adjr[[4]][1],
-    upr = CI_adjr[[4]][2]
-  ) %>% 
-  knitr::kable()
-```
-
-| quantity        | estimate\_mean | estimate\_sd |      lwr |       upr |
-| :-------------- | -------------: | -----------: | -------: | --------: |
-| adj\_r\_squared |      0.9110864 |    0.0085989 | 0.910848 | 0.9113248 |
-
   - Description: The distribution of Adjusted R square shows that this
     distribution has a heavy tail extending to low values and a bit of a
     “shoulder”, features that may be related to the frequency with which
-    large outliers are included in the bootstrap sample.From the table
-    above, we can see that the 95% confidence interval for adjusted R
-    squared is \[0.910848, 0.9113248\].
+    large outliers are included in the bootstrap sample.
 
 ### Plot the distribution of log(beta0 \* beta1)
 
@@ -400,29 +381,33 @@ estimate_r %>%
   )
 ```
 
-<img src="homework6_files/figure-gfm/unnamed-chunk-17-1.png" width="90%" />
-
-### Quantile and CI for log(beta0, beta1)
-
-``` r
-CI_log = t.test(bootstrap_results_log$log_beta0_beta1) 
-
-estimate_log %>% 
-  mutate(
-    lwr = CI_log[[4]][1],
-    upr = CI_log[[4]][2]
-  ) %>% 
-  knitr::kable()
-```
-
-| quantity      | estimate\_mean | estimate\_sd |      lwr |      upr |
-| :------------ | -------------: | -----------: | -------: | -------: |
-| log\_beta0\_1 |       2.013103 |    0.0239315 | 2.012439 | 2.013766 |
+<img src="homework6_files/figure-gfm/unnamed-chunk-16-1.png" width="90%" />
 
   - Description: The distribution of log(β0 ∗ β1) shows that this
     distribution seems normal, features that may be related to the few
     outliers are included in the bootstrap sample. This indicates and
     transformation of certain estimates could solve the non-normality
-    problem caused by outliers. From the table above, we can see that
-    the 95% confidence interval for log(β0 ∗ β1) is \[2.0124392,
-    2.0137662\].
+    problem caused by outliers.
+
+### Quantile for Adjusted R squared and log(beta0, beta1)
+
+``` r
+CI_result = 
+  tibble(
+    Conf_int = c("lwr","upr"),
+    CI_R_squared = quantile(pull(bootstrap_results,adj.r.squared), probs = c(0.025, 0.975),na.rm = TRUE),
+    CI_logbeta0_1 =  quantile(pull(bootstrap_results_log,log_beta0_beta1), probs = c(0.025, 0.975), na.rm = TRUE)
+  )
+  
+CI_result %>% 
+   knitr::kable(digits = 3)
+```
+
+| Conf\_int | CI\_R\_squared | CI\_logbeta0\_1 |
+| :-------- | -------------: | --------------: |
+| lwr       |          0.893 |           1.965 |
+| upr       |          0.927 |           2.059 |
+
+  - Description:From the table above, we can see that the 95% confidence
+    interval for adjusted R squared is \[0.893, 0.927\]. The 95%
+    confidence interval for log(β0 ∗ β1) is \[1.967, 2.059\].
