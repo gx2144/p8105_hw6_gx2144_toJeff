@@ -192,3 +192,58 @@ boot_straps =
   )
 
 ```
+
+
+### Distribution of estimate quantities
+
+```{r}
+bootstrap_results = 
+  boot_straps %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data = .x) ),
+    results = map(models, broom::glance)) %>% 
+  select(-strap_sample, -models) %>% 
+  unnest() 
+
+
+bootstrap_results_log = 
+  boot_straps %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data = .x) ),
+    results = map(models, broom::tidy)) %>%
+  select(-strap_sample, -models) %>% 
+  unnest() %>% 
+  select(strap_number,term, estimate)
+
+bootstrap_results_log = bootstrap_results_log %>% 
+  mutate(
+    term = factor(term,labels = c("beta0","beta1"))
+  ) %>% 
+  pivot_wider(
+    names_from = "term",
+    values_from = "estimate"
+  ) %>% 
+  mutate(
+    log_beta0_beta1 = log(beta0*beta1)
+  )
+
+
+estimate_r = data.frame(
+  quantity = "adj_r_squared",
+  estimate_mean = mean(pull(bootstrap_results, adj.r.squared)), 
+  estimate_sd = sd(pull(bootstrap_results, adj.r.squared))
+)
+
+
+
+estimate_log = data.frame(
+  quantity = "log_beta0_1",
+  estimate_mean = mean(pull(bootstrap_results_log, log_beta0_beta1)), 
+  estimate_sd = sd(pull(bootstrap_results_log,log_beta0_beta1))
+)
+
+
+bind_rows(estimate_r, estimate_log) %>% 
+  knitr::kable()
+
+```
