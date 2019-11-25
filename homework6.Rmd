@@ -1,0 +1,42 @@
+---
+title: "homework6"
+author: "Guangling Xu"
+date: "2019/11/24"
+output: github_document
+---
+---
+```{r}
+library(tidyverse)
+knitr::opts_chunk$set(
+    echo = TRUE,
+    warning = FALSE,
+    fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+```
+
+### Data Cleaning
+
+```{r}
+birthweight =
+  read_csv("./data/birthweight.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    babysex = factor(babysex, labels = c("male", "female")),
+    frace  = factor(frace, labels = c("White","Black","Asian","Puerto Rican","Other")),
+    malform = factor(malform, labels = c("absent","present")),
+    mrace = factor(mrace, labels = c("White","Black","Asian","Puerto Rican")),
+    babysex = fct_infreq(babysex),
+    frace = fct_infreq(frace),
+    malform=  fct_infreq(malform),
+    mrace = fct_infreq(mrace)
+     )
+```
