@@ -253,3 +253,39 @@ Based on the plot above, it is clear that the third model with the
 lowest RMSE ,which is the one using head circumference, length, sex, and
 all interactions (including the three-way interaction) between these
 fits the best.
+
+## Problem 2
+
+``` r
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+
+set.seed(1)
+```
+
+### Drawing many bootstrap samples
+
+``` r
+reg_weather = lm(tmax ~ tmin,data = weather_df)
+```
+
+``` r
+boot_sample = function(df) {
+  sample_frac(df, replace = TRUE)
+}
+
+boot_straps = 
+  data_frame(
+    strap_number = 1:5000,
+    strap_sample = rerun(5000, boot_sample(weather_df ))
+  )
+```
