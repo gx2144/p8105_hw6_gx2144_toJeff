@@ -347,3 +347,82 @@ bind_rows(estimate_r, estimate_log) %>%
 | :-------------- | -------------: | -----------: |
 | adj\_r\_squared |      0.9110864 |    0.0085989 |
 | log\_beta0\_1   |      2.0131027 |    0.0239315 |
+
+### Plot the distribution of Adjusted R Squared
+
+``` r
+bootstrap_results%>% 
+  ggplot(aes(x = adj.r.squared))+
+  geom_density() +
+  labs(
+    title = "Distribution of Adjusted R square",
+    x = "Adjusted R square",
+    y = "Density"
+  )
+```
+
+<img src="homework6_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
+
+### Quantile and CI for Adjusted R squared
+
+``` r
+CI_adjr = t.test(bootstrap_results$adj.r.squared) 
+
+estimate_r %>% 
+  mutate(
+    lwr = CI_adjr[[4]][1],
+    upr = CI_adjr[[4]][2]
+  ) %>% 
+  knitr::kable()
+```
+
+| quantity        | estimate\_mean | estimate\_sd |      lwr |       upr |
+| :-------------- | -------------: | -----------: | -------: | --------: |
+| adj\_r\_squared |      0.9110864 |    0.0085989 | 0.910848 | 0.9113248 |
+
+  - Description: The distribution of Adjusted R square shows that this
+    distribution has a heavy tail extending to low values and a bit of a
+    “shoulder”, features that may be related to the frequency with which
+    large outliers are included in the bootstrap sample.From the table
+    above, we can see that the 95% confidence interval for adjusted R
+    squared is \[0.910848, 0.9113248\].
+
+### Plot the distribution of log(beta0 \* beta1)
+
+``` r
+ bootstrap_results_log %>% 
+   ggplot(aes(x = log_beta0_beta1))+
+   geom_density() +
+   labs(
+    title = "Distribution of log(beta0*beta1)",
+    x = "log(beta0*beta1)",
+    y = "Density"
+  )
+```
+
+<img src="homework6_files/figure-gfm/unnamed-chunk-17-1.png" width="90%" />
+
+### Quantile and CI for log(beta0, beta1)
+
+``` r
+CI_log = t.test(bootstrap_results_log$log_beta0_beta1) 
+
+estimate_log %>% 
+  mutate(
+    lwr = CI_log[[4]][1],
+    upr = CI_log[[4]][2]
+  ) %>% 
+  knitr::kable()
+```
+
+| quantity      | estimate\_mean | estimate\_sd |      lwr |      upr |
+| :------------ | -------------: | -----------: | -------: | -------: |
+| log\_beta0\_1 |       2.013103 |    0.0239315 | 2.012439 | 2.013766 |
+
+  - Description: The distribution of log(β0 ∗ β1) shows that this
+    distribution seems normal, features that may be related to the few
+    outliers are included in the bootstrap sample. This indicates and
+    transformation of certain estimates could solve the non-normality
+    problem caused by outliers. From the table above, we can see that
+    the 95% confidence interval for log(β0 ∗ β1) is \[2.0124392,
+    2.0137662\].
